@@ -194,11 +194,18 @@ export function ShelfPage({ series, volumes, volumesOf, onAdd, onSelect, isPro, 
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               {series.length === 0 ? '作品を追加しよう' : '該当する作品がありません'}
             </p>
-            {series.length === 0 && (
+            {series.length === 0 ? (
               <button onClick={() => setShowAdd(true)}
                 className="px-6 py-2.5 rounded-xl text-sm font-semibold"
                 style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent2))', color: '#fff' }}>
                 最初の1冊を追加
+              </button>
+            ) : (
+              <button
+                onClick={() => { setStatus('すべて'); setGenre('すべて'); setEra('すべて'); setComp('すべて'); setSearch('') }}
+                className="px-5 py-2 rounded-xl text-sm font-medium"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+                フィルターをリセット
               </button>
             )}
           </div>
