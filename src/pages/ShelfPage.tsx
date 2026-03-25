@@ -84,7 +84,7 @@ export function ShelfPage({ series, volumes, volumesOf, onAdd, onSelect, isPro, 
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowTheme(true)}
-              className="md:hidden w-10 h-10 rounded-2xl flex items-center justify-center text-lg transition-transform active:scale-95"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg transition-transform active:scale-95"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--border)' }}>
               🎨
             </button>
