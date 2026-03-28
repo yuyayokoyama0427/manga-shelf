@@ -16,7 +16,7 @@ interface Props {
   onUpgrade?: () => void;
 }
 
-const STATUS_FILTERS = ['すべて', '所持', '読了', '欲しい'] as const;
+const STATUS_FILTERS = ['すべて', '所持', '読了', '欲しい', '積読'] as const;
 const BOOK_TYPES = ['すべて', '漫画', '書籍'] as const;
 
 export function ShelfPage({ series, volumes, volumesOf, onAdd, onSelect, isPro, freeLimit, onUpgrade }: Props) {
@@ -52,7 +52,8 @@ export function ShelfPage({ series, volumes, volumesOf, onAdd, onSelect, isPro, 
       statusFilter === 'すべて'  ? true :
       statusFilter === '所持'    ? vols.some(v => v.status === 'owned') :
       statusFilter === '読了'    ? vols.some(v => v.status === 'reading') :
-      statusFilter === '欲しい'  ? vols.some(v => v.status === 'want') : true;
+      statusFilter === '欲しい'  ? vols.some(v => v.status === 'want') :
+      statusFilter === '積読'    ? vols.some(v => v.status === 'backlog') : true;
     const matchGenre     = genreFilter === 'すべて' || s.genre === genreFilter;
     const matchEra       = eraFilter === 'すべて'   || new Date(s.addedAt).getFullYear() === parseInt(eraFilter);
     const matchCompleted =
@@ -102,6 +103,19 @@ export function ShelfPage({ series, volumes, volumesOf, onAdd, onSelect, isPro, 
             </button>
           </div>
         </div>
+
+        {/* 無料版上限接近バナー */}
+        {!isPro && freeLimit && series.length >= freeLimit - 5 && series.length < freeLimit && (
+          <div className="mb-3 rounded-xl p-3 flex items-center justify-between text-sm"
+            style={{ background: 'color-mix(in srgb, #f59e0b 10%, transparent)', border: '1px solid #f59e0b' }}>
+            <span style={{ color: 'var(--text)' }}>あと{freeLimit - series.length}件で無料上限（{freeLimit}シリーズ）です</span>
+            <button onClick={onUpgrade}
+              className="text-xs font-semibold px-3 py-1 rounded-lg ml-2 shrink-0"
+              style={{ background: '#f59e0b', color: '#fff' }}>
+              Pro版へ
+            </button>
+          </div>
+        )}
 
         {/* 無料版上限バナー */}
         {!isPro && freeLimit && series.length >= freeLimit && (

@@ -58,6 +58,7 @@ function volumeToRow(v: Volume) {
 export function useSupabaseStore(userId: string | null) {
   const [series, setSeries] = useState<Series[]>([])
   const [volumes, setVolumes] = useState<Volume[]>([])
+  const [dbError, setDbError] = useState<string | null>(null)
 
   const fetchAll = useCallback(async () => {
     if (!userId) return
@@ -73,22 +74,39 @@ export function useSupabaseStore(userId: string | null) {
 
   const addSeries = useCallback(async (s: Series) => {
     if (!userId) return
-    await supabase.from('series').insert(seriesToRow(s, userId))
+    const { error } = await supabase.from('series').insert(seriesToRow(s, userId))
+    if (error) { setDbError('シリーズの追加に失敗しました'); return }
     await fetchAll()
   }, [userId, fetchAll])
 
   const deleteSeries = useCallback(async (id: string) => {
-    await supabase.from('series').delete().eq('id', id)
+    const { error } = await supabase.from('series').delete().eq('id', id)
+    if (error) { setDbError('シリーズの削除に失敗しました'); return }
     await fetchAll()
   }, [fetchAll])
 
+  const updateSeries = useCallback(async (s: Series) => {
+    if (!userId) return
+    const { error } = await supabase.from('series').upsert(seriesToRow(s, userId))
+    if (error) { setDbError('シリーズの更新に失敗しました'); return }
+    await fetchAll()
+  }, [userId, fetchAll])
+
   const upsertVolume = useCallback(async (v: Volume) => {
-    await supabase.from('volumes').upsert(volumeToRow(v))
+    const { error } = await supabase.from('volumes').upsert(volumeToRow(v))
+    if (error) { setDbError('巻データの保存に失敗しました'); return }
+    await fetchAll()
+  }, [fetchAll])
+
+  const deleteVolume = useCallback(async (id: string) => {
+    const { error } = await supabase.from('volumes').delete().eq('id', id)
+    if (error) { setDbError('巻データの削除に失敗しました'); return }
     await fetchAll()
   }, [fetchAll])
 
   const addVolumes = useCallback(async (vs: Volume[]) => {
-    await supabase.from('volumes').upsert(vs.map(volumeToRow))
+    const { error } = await supabase.from('volumes').upsert(vs.map(volumeToRow))
+    if (error) { setDbError('巻データの一括追加に失敗しました'); return }
     await fetchAll()
   }, [fetchAll])
 
@@ -131,5 +149,5 @@ export function useSupabaseStore(userId: string | null) {
     return map
   }, [volumes])
 
-  return { series, volumes, addSeries, deleteSeries, upsertVolume, addVolumes, volumesOf, monthlySpend, dailySpend, weeklySpend }
+  return { series, volumes, dbError, addSeries, deleteSeries, updateSeries, upsertVolume, deleteVolume, addVolumes, volumesOf, monthlySpend, dailySpend, weeklySpend }
 }

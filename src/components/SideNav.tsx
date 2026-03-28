@@ -61,6 +61,10 @@ export function SideNav({ active, onChange, onTheme, user, onLogin, onLogout }: 
           </button>
         )}
       </div>
+      <div className="px-4 pb-4 flex gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <a href="/privacy" className="hover:underline">プライバシー</a>
+        <a href="/terms" className="hover:underline">利用規約</a>
+      </div>
     </aside>
   );
 }

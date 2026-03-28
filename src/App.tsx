@@ -40,6 +40,8 @@ function AppInner() {
       onUpsertVolume={store.upsertVolume}
       onAddVolumes={store.addVolumes}
       onDelete={store.deleteSeries}
+      onDeleteVolume={store.deleteVolume}
+      onUpdateSeries={store.updateSeries}
     />
   ) : (
     <>
@@ -70,8 +72,15 @@ function AppInner() {
     </>
   );
 
+  const storeDbError = user ? remoteStore.dbError : null;
+
   return (
     <>
+      {storeDbError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white text-sm px-4 py-2 rounded-xl shadow-lg">
+          {storeDbError}
+        </div>
+      )}
       {/* デスクトップ: サイドバー + メインエリア */}
       <div className="hidden md:flex h-dvh overflow-hidden">
         <SideNav active={tab} onChange={t => { setSelected(null); setTab(t); }} onTheme={() => setShowTheme(true)} user={user} onLogin={() => setShowLogin(true)} onLogout={signOut} />

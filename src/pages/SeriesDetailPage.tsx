@@ -9,6 +9,8 @@ interface Props {
   onUpsertVolume: (v: Volume) => void;
   onAddVolumes: (vs: Volume[]) => void;
   onDelete: (id: string) => void;
+  onDeleteVolume: (id: string) => void;
+  onUpdateSeries: (s: Series) => void;
 }
 
 const STATUS_LABEL: Record<ReadStatus, string> = {
@@ -20,7 +22,7 @@ const STATUS_COLOR: Record<ReadStatus, string> = {
 
 type AddMode = 'single' | 'bulk';
 
-export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAddVolumes, onDelete }: Props) {
+export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAddVolumes, onDelete, onDeleteVolume, onUpdateSeries }: Props) {
   // 次の未登録巻を計算
   const nextVolNum = () => {
     if (volumes.length === 0) return '1';
@@ -33,6 +35,8 @@ export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAd
 
   const [showForm, setShowForm] = useState(false);
   const [addMode, setAddMode]   = useState<AddMode>('single');
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ title: series.title, author: series.author, coverUrl: series.coverUrl });
 
   // 単巻追加
   const [sv, setSv] = useState({ num: '', price: '', date: '', releaseDate: '', status: 'owned' as ReadStatus });
@@ -58,12 +62,10 @@ export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAd
         const query = `intitle:${series.title} ${num}巻`;
         const results = await searchManga(query);
         const target = parseInt(num);
-        console.log('[fetch]', query, '→', results.map(r => `vol:${r.volumeNumber} price:${r.price} date:${r.publishedDate} title:${r.title}`));
         // 巻数一致を優先、なければ価格か日付があるものを使う
         const match = results.find(r => r.volumeNumber === target && (r.price !== null || r.publishedDate !== null))
           ?? results.find(r => r.volumeNumber === target)
           ?? results.find(r => r.price !== null || r.publishedDate !== null);
-        console.log('[match]', match);
         if (match?.publishedDate) {
           setSv(n => ({ ...n, releaseDate: match.publishedDate! }));
         } else {
@@ -144,9 +146,44 @@ export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAd
         </div>
         <button onClick={onBack} className="absolute top-4 left-4 w-8 h-8 rounded-full flex items-center justify-center"
           style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', color: '#fff' }}>‹</button>
+        <button onClick={() => { setEditForm({ title: series.title, author: series.author, coverUrl: series.coverUrl }); setShowEdit(true); }}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-sm"
+          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', color: '#fff' }}>✏️</button>
       </div>
 
       <div className="px-5 mt-4 space-y-4">
+        {/* シリーズ編集フォーム */}
+        {showEdit && (
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>シリーズを編集</p>
+            {[
+              { key: 'title', label: 'タイトル', type: 'text' },
+              { key: 'author', label: '著者', type: 'text' },
+              { key: 'coverUrl', label: 'カバー画像URL', type: 'text' },
+            ].map(f => (
+              <div key={f.key} className="flex flex-col gap-1">
+                <label className="text-[10px] px-1" style={{ color: 'var(--text-muted)' }}>{f.label}</label>
+                <input type={f.type} value={(editForm as any)[f.key]}
+                  onChange={e => setEditForm(n => ({ ...n, [f.key]: e.target.value }))}
+                  className="rounded-xl px-3 py-2 text-sm outline-none"
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <button onClick={() => { onUpdateSeries({ ...series, ...editForm }); setShowEdit(false); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: 'color-mix(in srgb, var(--accent) 30%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' }}>
+                保存
+              </button>
+              <button onClick={() => setShowEdit(false)}
+                className="px-4 py-2.5 rounded-xl text-sm"
+                style={{ background: 'var(--input-bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                キャンセル
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 追加ボタン */}
         <button onClick={() => showForm ? setShowForm(false) : openForm()}
           className="w-full py-3 rounded-2xl text-sm font-semibold"
@@ -262,6 +299,12 @@ export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAd
                   style={{ background: `${STATUS_COLOR[v.status]}22`, color: STATUS_COLOR[v.status] }}>
                   {STATUS_LABEL[v.status]}
                 </span>
+                <button
+                  onClick={e => { e.stopPropagation(); onDeleteVolume(v.id); }}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0"
+                  style={{ color: 'var(--text-muted)' }}>
+                  ×
+                </button>
               </div>
             ))}
           </div>
@@ -269,7 +312,7 @@ export function SeriesDetailPage({ series, volumes, onBack, onUpsertVolume, onAd
           <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>まだ巻が登録されていません</p>
         )}
 
-        <button onClick={() => { onDelete(series.id); onBack(); }}
+        <button onClick={() => { if (window.confirm(`「${series.title}」を削除しますか？巻のデータもすべて消えます。`)) { onDelete(series.id); onBack(); } }}
           className="w-full py-3 rounded-2xl text-sm transition-colors"
           style={{ color: 'var(--text-muted)' }}>
           このシリーズを削除

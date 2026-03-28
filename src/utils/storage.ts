@@ -3,11 +3,19 @@ import type { Series, Volume } from '../types';
 const KEYS = { series: 'manga_series', volumes: 'manga_volumes' };
 
 export const storage = {
-  getSeries: (): Series[] => JSON.parse(localStorage.getItem(KEYS.series) ?? '[]'),
-  saveSeries: (data: Series[]) => localStorage.setItem(KEYS.series, JSON.stringify(data)),
+  getSeries: (): Series[] => {
+    try { return JSON.parse(localStorage.getItem(KEYS.series) ?? '[]') } catch { return [] }
+  },
+  saveSeries: (data: Series[]) => {
+    try { localStorage.setItem(KEYS.series, JSON.stringify(data)) } catch {}
+  },
 
-  getVolumes: (): Volume[] => JSON.parse(localStorage.getItem(KEYS.volumes) ?? '[]'),
-  saveVolumes: (data: Volume[]) => localStorage.setItem(KEYS.volumes, JSON.stringify(data)),
+  getVolumes: (): Volume[] => {
+    try { return JSON.parse(localStorage.getItem(KEYS.volumes) ?? '[]') } catch { return [] }
+  },
+  saveVolumes: (data: Volume[]) => {
+    try { localStorage.setItem(KEYS.volumes, JSON.stringify(data)) } catch {}
+  },
 
   addSeries: (s: Series) => {
     const list = storage.getSeries();
@@ -22,5 +30,13 @@ export const storage = {
     const idx = list.findIndex(x => x.id === v.id);
     if (idx >= 0) list[idx] = v; else list.push(v);
     storage.saveVolumes(list);
+  },
+  deleteVolume: (id: string) => {
+    storage.saveVolumes(storage.getVolumes().filter(v => v.id !== id));
+  },
+  updateSeries: (s: Series) => {
+    const list = storage.getSeries();
+    const idx = list.findIndex(x => x.id === s.id);
+    if (idx >= 0) { list[idx] = s; storage.saveSeries(list); }
   },
 };

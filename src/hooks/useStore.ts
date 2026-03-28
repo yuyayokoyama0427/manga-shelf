@@ -13,7 +13,9 @@ export function useStore() {
 
   const addSeries     = useCallback((s: Series) => { storage.addSeries(s); refresh(); }, [refresh]);
   const deleteSeries  = useCallback((id: string) => { storage.deleteSeries(id); refresh(); }, [refresh]);
+  const updateSeries  = useCallback((s: Series) => { storage.updateSeries(s); refresh(); }, [refresh]);
   const upsertVolume  = useCallback((v: Volume) => { storage.upsertVolume(v); refresh(); }, [refresh]);
+  const deleteVolume  = useCallback((id: string) => { storage.deleteVolume(id); refresh(); }, [refresh]);
 
   // 一括追加
   const addVolumes = useCallback((vs: Volume[]) => {
@@ -69,5 +71,5 @@ export function useStore() {
     return map;
   }, [volumes]);
 
-  return { series, volumes, addSeries, deleteSeries, upsertVolume, addVolumes, volumesOf, monthlySpend, dailySpend, weeklySpend };
+  return { series, volumes, addSeries, deleteSeries, updateSeries, upsertVolume, deleteVolume, addVolumes, volumesOf, monthlySpend, dailySpend, weeklySpend };
 }

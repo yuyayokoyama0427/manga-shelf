@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'manga_shelf_license'
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const FREE_LIMIT = 30  // 無料版は30シリーズまで
 
 export function getLicenseKey(): string | null {
@@ -6,7 +7,8 @@ export function getLicenseKey(): string | null {
 }
 
 export function isProFromStorage(): boolean {
-  return !!localStorage.getItem(STORAGE_KEY)
+  const key = localStorage.getItem(STORAGE_KEY)
+  return key !== null && UUID_REGEX.test(key)
 }
 
 export async function validateLicense(key: string): Promise<boolean> {
